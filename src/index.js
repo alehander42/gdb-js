@@ -144,9 +144,15 @@ class GDB extends EventEmitter {
       .filter((msg) => msg.type === 'console')
       // It's not possible for a command message to be split into multiple
       // console records, so we can safely just regex every record.
-      .map((msg) => /<gdbjs:cmd:[a-z-]+ (.*?) [a-z-]+:cmd:gdbjs>/.exec(msg.data))
+      .map((msg) => {
+        console.log('js:', msg.data)
+        return /<gdbjs:cmd:[a-z-]+ (.*?) [a-z-]+:cmd:gdbjs>/.exec(msg.data)
+      })
       .compact()
-      .map((msg) => JSON.parse(msg[1]))
+      .map((msg) => {
+        console.log('ks:', msg)
+        return JSON.parse(msg[1])
+      })
       .tap(debugCLIResluts)
 
     success.observe()

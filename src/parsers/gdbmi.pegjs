@@ -4,9 +4,11 @@
     // `=breakpoint-modified` when `addr` property is `<MULTIPLE>`).
     // Below code helps to turn such records into the array.
 
+    console.log(arr)
     for (let i = 0; i < arr.length; i++) {
       if (!arr[i].name) arr[i].name = arr[i - 1] ? arr[i - 1].name : 'unnamed';
     }
+
 
     let res = arr.reduce((acc, r) => {
       if (!acc[r.name]) acc[r.name] = []
@@ -54,7 +56,7 @@ NotifyAsyncOutput
     }
 
 ConsoleStreamOutput
-  = "~" data:Const { return { type: 'console', data } }
+  = "~" data:Const { return { type: 'console', data } } //return { type: 'result', state: 'done', data: makeResults([{name: 'console', value: data}]) } }
 
 TargetStreamOutput
   = "@" data:Const { return { type: 'target', data } }
@@ -100,6 +102,7 @@ Const "c-string"
 Char "char"
   = [^%\\\"] / "%" { return '%25' }
   / "\\" seq:([0-7][0-7][0-7]) { return '%' + parseInt(seq.join(''), 8).toString(16) }
+  / "\n" { return '2' }
   / "\\" seq:Escaped { return seq }
 
 Escaped "escaped"
