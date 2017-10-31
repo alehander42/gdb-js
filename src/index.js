@@ -696,6 +696,19 @@ class GDB extends EventEmitter {
   }
 
   /**
+   * Step back out of the function.
+   *
+   * @param {Thread|ThreadGroup} [scope] The thread or thread group where
+   *   the stepping should be done.
+   *
+   * @returns {Promise<undefined, GDBError>} A promise that resolves/rejects
+   *   after completion of a GDB command.
+   */
+  reverseStepOut (scope) {
+    return this._sync(() => this._execMI('-exec-finish --reverse', scope))
+  }
+
+  /**
    * Execute to the next line.
    *
    * @param {Thread|ThreadGroup} [scope] The thread or thread group where
