@@ -667,7 +667,7 @@ class GDB extends EventEmitter {
   }
 
   addWriteWatch (address, thread) {
-    return this.addWriteWatch(`-w ${address}`, thread)
+    return this.addOptionsWatch(`-w ${address}`, thread)
   }
 
   /**
@@ -681,6 +681,7 @@ class GDB extends EventEmitter {
   addOptionsWatch (options, thread) {
     return this._sync(async() => {
       let opt = thread ? '-p ' + thread.id : ''
+      options = options.replace('-l ', '*')
       let { bkpt } = await this._execMI(`-break-watch ${opt} ${options}`)
       if (Array.isArray(bkpt)) {
         return new Breakpoint(toInt(bkpt[0].number), {
