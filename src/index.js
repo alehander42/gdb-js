@@ -260,6 +260,8 @@ class GDB extends EventEmitter {
         }
         if (data.reason === 'breakpoint-hit') {
           event.breakpoint = new Breakpoint(toInt(data.bkptno))
+        } else if (data.reason === 'watchpoint-trigger') {
+          event.watchpoint = new Watchpoint(toInt(data.wpt.number), {exp: data.wpt.exp})
         }
 
         this.emit('stopped', event)
