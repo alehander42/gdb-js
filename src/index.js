@@ -585,7 +585,7 @@ class GDB extends EventEmitter {
    * @returns {Promise<Breakpoint, GDBError>} A promise that resolves with a breakpoint.
    */
   addBreak (file, pos, thread) {
-    return this.addOptionsBreak(`${file}:${pos}`)
+    return this.addOptionsBreak(`${file}:${pos}`, thread)
   }
 
   /**
@@ -598,7 +598,7 @@ class GDB extends EventEmitter {
    * @returns {Promise<Breakpoint, GDBError>} A promise that resolves with a breakpoint.
    */
   addFunctionBreak (label, thread) {
-    return this.addOptionsBreak(`--function ${label}`)
+    return this.addOptionsBreak(`--function ${label}`, thread)
   }
 
   /**
@@ -611,7 +611,7 @@ class GDB extends EventEmitter {
    * @returns {Promise<Breakpoint, GDBError>} A promise that resolves with a breakpoint.
    */
   addLabelBreak (label, thread) {
-    return this.addOptionsBreak(`--label ${label}`)
+    return this.addOptionsBreak(`--label ${label}`, thread)
   }
 
   /**
@@ -628,6 +628,60 @@ class GDB extends EventEmitter {
     return this._sync(async () => {
       let opt = thread ? '-p ' + thread.id : ''
       let { bkpt } = await this._execMI(`-break-insert ${opt} ${options}`)
+      if (Array.isArray(bkpt)) {
+        return new Breakpoint(toInt(bkpt[0].number), {
+          file: bkpt[1].fullname,
+          line: bkpt[1].line,
+          func: bkpt.map((b) => b.func).filter((f) => !!f),
+          thread
+        })
+      } else {
+        return new Breakpoint(toInt(bkpt.number), {
+          file: bkpt.fullname,
+          line: toInt(bkpt.line),
+          func: bkpt.func,
+          thread
+        })
+      }
+    })
+  }
+
+  /**
+   * Insert a watchpoint
+   *
+   * @param {string} address: arg
+   *   Argument is what you would add after watch
+   *   It can be addWatch('a')
+   *   addWatch('&a')
+   *   addWatch('-l a')
+   * @param {Thread} [thread]: the thread
+   *
+   * @returns {Promise<Breakpoint, GDBError>}
+   */
+  addWatch (address, thread) {
+    return this.addOptionsWatch(address, thread)
+  }
+
+  addAccessWatch (address, thread) {
+    return this.addOptionsWatch(`-a ${address}`, thread)
+  }
+
+  addWriteWatch (address, thread) {
+    return this.addWriteWatch(`-w ${address}`, thread)
+  }
+
+  /**
+   * Insert a watchpoint at the specified location
+   *
+   * @param {string} options: -a, -r or empty
+   * @param {Thread} [thread] The thread
+   *
+   * @returns {Promise<Breakpoint, GDBError>} A promise that resolves with a breakpoint
+   */
+  addOptionsWatch (options, thread) {
+    return this._sync(async() => {
+      let opt = thread ? '-p ' + thread.id : ''
+      let { bkpt } = await this._execMI(`-break-watch ${opt} ${options}`)
       if (Array.isArray(bkpt)) {
         return new Breakpoint(toInt(bkpt[0].number), {
           file: bkpt[1].fullname,
