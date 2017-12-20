@@ -10,6 +10,8 @@ import Thread from './thread.js'
 import ThreadGroup from './group.js'
 // Breakpoint object class.
 import Breakpoint from './breakpoint.js'
+// Watchpoint support
+import Watchpoint from './watchpoint.js'
 // Frame object class.
 import Frame from './frame.js'
 // Variable object class.
@@ -656,7 +658,7 @@ class GDB extends EventEmitter {
    *   addWatch('-l a')
    * @param {Thread} [thread]: the thread
    *
-   * @returns {Promise<Breakpoint, GDBError>}
+   * @returns {Promise<Watchpoint, GDBError>}
    */
   addWatch (address, thread) {
     return this.addOptionsWatch(address, thread)
@@ -676,28 +678,17 @@ class GDB extends EventEmitter {
    * @param {string} options: -a, -r or empty
    * @param {Thread} [thread] The thread
    *
-   * @returns {Promise<Breakpoint, GDBError>} A promise that resolves with a breakpoint
+   * @returns {Promise<Watchpoint, GDBError>} A promise that resolves with a watchpoint
    */
   addOptionsWatch (options, thread) {
     return this._sync(async() => {
       let opt = thread ? '-p ' + thread.id : ''
       options = options.replace('-l ', '*')
-      let { bkpt } = await this._execMI(`-break-watch ${opt} ${options}`)
-      if (Array.isArray(bkpt)) {
-        return new Breakpoint(toInt(bkpt[0].number), {
-          file: bkpt[1].fullname,
-          line: bkpt[1].line,
-          func: bkpt.map((b) => b.func).filter((f) => !!f),
-          thread
-        })
-      } else {
-        return new Breakpoint(toInt(bkpt.number), {
-          file: bkpt.fullname,
-          line: toInt(bkpt.line),
-          func: bkpt.func,
-          thread
-        })
-      }
+      let { wpt } = await this._execMI(`-break-watch ${opt} ${options}`)
+      return new Watchpoint(toInt(wpt.number), {
+        exp: wpt.exp,
+        thread
+      })
     })
   }
 
