@@ -17,20 +17,24 @@ class ContextCommand(BaseCommand):
             for symbol in block:
                 name = symbol.name
                 if (name not in names) and (symbol.is_argument or
-                   symbol.is_variable or symbol.is_function or
-                   symbol.is_constant):
-                    scope = "global" if block.is_global else \
-                            "static" if block.is_static else \
-                            "argument" if symbol.is_argument else \
-                            "local"
+                                            symbol.is_variable or symbol.is_function or
+                                            symbol.is_constant):
+                    scope = "local"
+                    if block.is_global:
+                        scope = "global"
+                    elif block.is_static:
+                        scope = "static"
+                    elif symbol.is_argument:
+                        scope = "argument"
                     names.add(name)
+                    # value can be too big, and we dont use it, we use load_value
                     variables.append({
                         "name": symbol.name,
-                        "value": str(symbol.value(frame)),
                         "type": str(symbol.type),
                         "scope": scope
                     })
             block = block.superblock
         return variables
+
 
 gdbjsContext = ContextCommand()
